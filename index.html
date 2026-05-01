@@ -1521,6 +1521,38 @@ section { padding: 120px 0; position: relative; z-index: 3; }
     opacity: 1;
     transform: translateY(0);
 }
+   <!-- ═══════════════════════════════════════════════════════════
+     TRACKING · Google Analytics 4
+     ═══════════════════════════════════════════════════════════ -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QSE2EEDQPP"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QSE2EEDQPP', {
+        send_page_view: true,
+        page_title: 'Landing Método ALPHA'
+    });
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TRACKING · Meta Pixel
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1304194971684545');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1304194971684545&ev=PageView&noscript=1"
+/></noscript>
 </style>
 </head>
 <body>
@@ -2404,6 +2436,137 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     });
 });
 </script>
+// ═══════════════════════════════════════════════════════════
+// MÉTODO ALPHA · Tracking de eventos
+// ═══════════════════════════════════════════════════════════
 
+// Helper: enviar eventos a Meta + GA4 simultáneamente
+function track(eventName, params = {}) {
+    try {
+        if (typeof fbq === 'function') {
+            const standardEvents = ['Lead', 'CompleteRegistration', 'InitiateCheckout', 'Purchase', 'ViewContent'];
+            if (standardEvents.includes(eventName)) {
+                fbq('track', eventName, params);
+            } else {
+                fbq('trackCustom', eventName, params);
+            }
+        }
+        if (typeof gtag === 'function') {
+            gtag('event', eventName, params);
+        }
+        console.log('[track]', eventName, params);
+    } catch (e) {
+        console.warn('[track error]', e);
+    }
+}
+
+// Capturar UTMs y persistirlos en sessionStorage
+(function captureUTMs() {
+    const params = new URLSearchParams(window.location.search);
+    const utms = {};
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'].forEach(key => {
+        const v = params.get(key);
+        if (v) utms[key] = v;
+    });
+    if (Object.keys(utms).length > 0) {
+        try {
+            sessionStorage.setItem('utms', JSON.stringify(utms));
+            sessionStorage.setItem('utms_timestamp', Date.now().toString());
+        } catch (e) {}
+    }
+})();
+
+// Helper: añadir UTMs a la URL final (CTA → app)
+function appendUTMs(url) {
+    try {
+        const stored = sessionStorage.getItem('utms');
+        if (!stored) return url;
+        const utms = JSON.parse(stored);
+        const u = new URL(url);
+        Object.entries(utms).forEach(([k, v]) => u.searchParams.set(k, v));
+        return u.toString();
+    } catch (e) {
+        return url;
+    }
+}
+
+// Modificar todos los enlaces a la app para añadir UTMs
+document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forEach(a => {
+    a.href = appendUTMs(a.href);
+});
+
+// LandingView (página vista, además del PageView de Meta)
+track('LandingView', {
+    device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+    referrer: document.referrer || 'direct'
+});
+
+// Scroll tracking (50% y 90%)
+let scrollMidFired = false;
+let scrollDeepFired = false;
+window.addEventListener('scroll', () => {
+    const scrollPct = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100;
+    if (scrollPct >= 50 && !scrollMidFired) {
+        scrollMidFired = true;
+        track('ScrollMid', { percentage: 50 });
+    }
+    if (scrollPct >= 90 && !scrollDeepFired) {
+        scrollDeepFired = true;
+        track('ScrollDeep', { percentage: 90 });
+    }
+}, { passive: true });
+
+// Click tracking en CTAs principales
+document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forEach(a => {
+    a.addEventListener('click', () => {
+        let ctaLocation = 'unknown';
+        let ctaPlan = null;
+
+        const planEl = a.closest('.plan');
+        if (planEl) {
+            if (planEl.querySelector('.plan-name')?.textContent.toLowerCase().includes('básico')) {
+                ctaLocation = 'pricing_basico';
+                ctaPlan = 'basico';
+            } else if (planEl.classList.contains('featured')) {
+                ctaLocation = 'pricing_pro';
+                ctaPlan = 'pro';
+            } else {
+                ctaLocation = 'pricing_elite';
+                ctaPlan = 'elite';
+            }
+        } else if (a.closest('.nav')) {
+            ctaLocation = 'nav';
+        } else if (a.closest('.hero')) {
+            ctaLocation = 'hero';
+        } else if (a.closest('.final-cta')) {
+            ctaLocation = 'final_cta';
+        }
+
+        track('Lead', {
+            content_name: 'Click CTA Empezar',
+            content_category: ctaLocation,
+            plan: ctaPlan
+        });
+        track('ClickEmpezar', {
+            location: ctaLocation,
+            plan: ctaPlan
+        });
+    });
+});
+
+// FAQ tracking
+document.querySelectorAll('.faq-item summary').forEach(s => {
+    s.addEventListener('click', () => {
+        const question = s.textContent.trim();
+        const isOpening = !s.parentElement.hasAttribute('open');
+        if (isOpening) {
+            track('ClickFAQ', { question: question.slice(0, 60) });
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════
+// (resto del código que ya tienes: nav scroll, fade-up, smooth scroll)
+// ═══════════════════════════════════════════════════════════
 </body>
 </html>
