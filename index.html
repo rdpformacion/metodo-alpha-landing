@@ -2392,40 +2392,76 @@ function track(eventName, params = {}) {
     }
 }
 
-// Capturar UTMs y persistirlos en sessionStorage
-(function captureUTMs() {
+// Capturar UTMs + Meta tracking (_fbp cookie, fbclid, fbc) y persistirlos
+(function captureTracking() {
     const params = new URLSearchParams(window.location.search);
-    const utms = {};
-    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'].forEach(key => {
+    const tracking = {};
+
+    // 1. UTMs estándar
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid'].forEach(key => {
         const v = params.get(key);
-        if (v) utms[key] = v;
+        if (v) tracking[key] = v;
     });
-    if (Object.keys(utms).length > 0) {
+
+    // 2. fbclid: parámetro que Meta añade cuando vienes de un anuncio
+    const fbclid = params.get('fbclid');
+    if (fbclid) {
+        tracking.fbclid = fbclid;
+        // Construir _fbc en el formato que Meta espera: fb.1.{timestamp}.{fbclid}
+        tracking.fbc = `fb.1.${Date.now()}.${fbclid}`;
+    }
+
+    // 3. _fbp cookie: Meta Pixel la crea automáticamente al cargar
+    // (puede tardar un par de segundos en estar disponible)
+    function readFbp() {
+        const match = document.cookie.match(/_fbp=([^;]+)/);
+        return match ? match[1] : null;
+    }
+    const fbp = readFbp();
+    if (fbp) tracking.fbp = fbp;
+
+    // 4. Persistir en sessionStorage
+    if (Object.keys(tracking).length > 0) {
         try {
-            sessionStorage.setItem('utms', JSON.stringify(utms));
+            sessionStorage.setItem('utms', JSON.stringify(tracking));
             sessionStorage.setItem('utms_timestamp', Date.now().toString());
         } catch (e) {}
     }
+
+    // 5. Reintento para capturar _fbp después de que cargue Meta Pixel
+    // (la cookie no existe inmediatamente al cargar, tarda 1-2 seg)
+    setTimeout(() => {
+        const fbpDelayed = readFbp();
+        if (fbpDelayed && fbpDelayed !== tracking.fbp) {
+            try {
+                const stored = JSON.parse(sessionStorage.getItem('utms') || '{}');
+                stored.fbp = fbpDelayed;
+                sessionStorage.setItem('utms', JSON.stringify(stored));
+            } catch (e) {}
+        }
+    }, 2500);
 })();
 
-// Helper: añadir UTMs a la URL final (CTA → app)
+// Helper: añadir UTMs + tracking Meta a la URL final (CTA → app)
 function appendUTMs(url) {
     try {
         const stored = sessionStorage.getItem('utms');
-        if (!stored) return url;
-        const utms = JSON.parse(stored);
+        const tracking = stored ? JSON.parse(stored) : {};
+
+        // En el momento del click, intentar leer _fbp fresca
+        // (puede haber cambiado o estar disponible ahora si no lo estaba antes)
+        const fbpMatch = document.cookie.match(/_fbp=([^;]+)/);
+        if (fbpMatch) tracking.fbp = fbpMatch[1];
+
+        if (Object.keys(tracking).length === 0) return url;
+
         const u = new URL(url);
-        Object.entries(utms).forEach(([k, v]) => u.searchParams.set(k, v));
+        Object.entries(tracking).forEach(([k, v]) => u.searchParams.set(k, v));
         return u.toString();
     } catch (e) {
         return url;
     }
 }
-
-// Modificar todos los enlaces a la app para añadir UTMs
-document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forEach(a => {
-    a.href = appendUTMs(a.href);
-});
 
 // LandingView (página vista, además del PageView de Meta)
 track('LandingView', {
@@ -2448,9 +2484,10 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// Click tracking en CTAs principales
+// Click tracking + redirección con UTMs frescos en CTAs principales
 document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forEach(a => {
-    a.addEventListener('click', () => {
+    a.addEventListener('click', (event) => {
+        // Identificar de qué CTA viene
         let ctaLocation = 'unknown';
         let ctaPlan = null;
 
@@ -2474,6 +2511,7 @@ document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forE
             ctaLocation = 'final_cta';
         }
 
+        // Disparar eventos de tracking
         track('Lead', {
             content_name: 'Click CTA Empezar',
             content_category: ctaLocation,
@@ -2483,7 +2521,14 @@ document.querySelectorAll('a[href*="elrincondelpolicia.app/metodo-alpha"]').forE
             location: ctaLocation,
             plan: ctaPlan
         });
+
+        // Refrescar la URL del enlace con los UTMs y tracking actuales
+        // (al hacer click, capturamos el _fbp fresco si está disponible)
+        a.href = appendUTMs(a.getAttribute('data-original-href') || a.href);
     });
+
+    // Guardamos el href original por si lo necesitamos
+    a.setAttribute('data-original-href', a.href);
 });
 
 // FAQ tracking
