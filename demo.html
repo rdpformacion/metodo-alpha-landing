@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prueba el Método ALPHA · El Rincón del Policía</title>
+<meta name="description" content="Prueba el Método ALPHA en 2 minutos. El sistema diseñado para opositores al CNP que trabajan o tienen familia.">
+
+<!-- ═══════════════════════════════════════════════════════════
+     CONFIGURACIÓN — EDITA AQUÍ ANTES DE DESPLEGAR
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+window.DEMO_CONFIG = {
+    // URL de la Cloud Function que guarda el lead en Firestore
+    // (sustituir por la URL real cuando se despliegue guardarLead)
+    leadEndpoint: 'https://europe-west1-elrincondelpolicia-app.cloudfunctions.net/guardarLead',
+    
+    // URLs de Stripe Checkout para cada plan
+    stripe: {
+        basico: 'https://buy.stripe.com/8x25kD3Qy8v2d2Hel933W21',
+        pro:    'https://buy.stripe.com/7sY3cv86O12A6Ejel933W22',
+        elite:  'https://buy.stripe.com/6oUaEX5YGaDa5Af6SH33W23'
+    },
+    
+    // URL de la app (para el link de "ya tengo cuenta")
+    appUrl: 'https://www.elrincondelpolicia.app/metodo-alpha',
+    
+    // URL de la política de privacidad
+    privacyUrl: '/privacidad'
+};
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Big+Shoulders+Display:wght@700;800;900&family=Special+Elite&display=swap" rel="stylesheet">
+
+<!-- Tracking propagator: hereda UTMs si se navega desde la landing principal -->
+<script src="/tracking-propagator.js" defer></script>
+
+<style>
+:root {
+    --bg-dark: #000000;
+    --bg-navy: #0F2041;
+    --bg-navy-2: #1A3160;
+    --gold: #D4AF37;
+    --gold-soft: #FAEEDA;
+    --gold-text: #854F0B;
+    --bg-page: #F8F9FB;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F3F4F6;
+    --bg-soft: #F1F5F9;
+    --border: #E5E7EB;
+    --border-soft: rgba(15, 32, 65, 0.08);
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-tertiary: #9CA3AF;
+    --green: #16A34A;
+    --green-bg: #DCFCE7;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --red-border: #FEE2E2;
+    --blue: #1D4ED8;
+    --blue-bg: #EFF6FF;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(15,32,65,0.08);
+    --shadow-lg: 0 10px 30px rgba(15,32,65,0.12);
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --font-display: 'Big Shoulders Display', 'Anton', 'Impact', sans-serif;
+    --font-distressed: 'Special Elite', 'Courier New', monospace;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    font-family: var(--font-body);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER NEGRO — "EL RINCÓN DEL POLICÍA"
+   ═══════════════════════════════════════════════════════════ */
+.header-rincon {
+    background: var(--bg-dark);
+    padding: 18px 0;
+    text-align: center;
+    border-bottom: 2px solid var(--bg-navy);
+}
+.header-rincon .marca {
+    font-family: var(--font-distressed);
+    color: white;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+.header-rincon .marca .acento {
+    color: var(--gold);
+    font-weight: 700;
+    margin: 0 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER NAVY — "MÉTODO ALPHA"
+   ═══════════════════════════════════════════════════════════ */
+.header-alpha {
+    background: var(--bg-navy);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+.header-alpha .menu-icon {
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+.header-alpha .logo-alpha {
+    font-family: var(--font-display);
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.header-alpha .logo-alpha .alpha-acento { color: var(--gold); margin: 0 6px; }
+.header-alpha .iconos {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+}
+.header-alpha .iconos span {
+    cursor: default;
+    transition: color 0.2s;
+}
+.header-alpha .iconos .icono-llave { color: var(--gold); }
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENEDOR PRINCIPAL
+   ═══════════════════════════════════════════════════════════ */
+.demo-wrapper {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 20px 48px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BARRA DE PROGRESO
+   ═══════════════════════════════════════════════════════════ */
+.progress-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+    padding: 0 4px;
+}
+.progress-step {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+.progress-step.done { background: var(--gold); }
+.progress-step.active {
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 50%, var(--border) 50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLAS
+   ═══════════════════════════════════════════════════════════ */
+.pantalla {
+    display: none;
+    animation: fadeIn 0.35s ease;
+}
+.pantalla.active { display: block; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.titulo-display {
+    font-family: var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bg-navy);
+    line-height: 1.05;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 0 — CAPTURA DE LEAD
+   ═══════════════════════════════════════════════════════════ */
+.lead-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 36px 36px 30px;
+    box-shadow: var(--shadow-md);
+    max-width: 520px;
+    margin: 24px auto 0;
+    border: 1px solid var(--border-soft);
+}
+.lead-card .badge {
+    display: inline-block;
+    background: var(--gold-soft);
+    color: var(--gold-text);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.lead-card h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--bg-navy);
+    line-height: 1.05;
+    margin-bottom: 10px;
+}
+.lead-card .subtitle {
+    color: var(--text-secondary);
+    font-size: 14.5px;
+    margin-bottom: 24px;
+    line-height: 1.55;
+}
+.lead-card label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    margin-top: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.lead-card input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lead-card input:focus {
+    outline: none;
+    border-color: var(--bg-navy);
+    box-shadow: 0 0 0 3px rgba(15, 32, 65, 0.08);
+}
+.lead-card input.error {
+    border-color: var(--red);
+    background: var(--red-bg);
+}
+.lead-card .privacy {
+    margin-top: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.lead-card .privacy input[type="checkbox"] {
+    width: auto;
+    margin: 3px 0 0 0;
+    flex-shrink: 0;
+}
+.lead-card .privacy a {
+    color: var(--bg-navy);
+    text-decoration: underline;
+}
+.btn-primary {
+    width: 100%;
+    background: var(--bg-navy);
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    margin-top: 22px;
+    transition: background 0.2s, transform 0.05s;
+    letter-spacing: 0.3px;
+}
+.btn-primary:hover { background: var(--bg-navy-2); }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled {
+    background: #94A3B8;
+    cursor: not-allowed;
+}
+.btn-primary.btn-gold {
+    background: var(--gold);
+    color: var(--bg-navy);
+}
+.btn-primary.btn-gold:hover { background: #B8941F; }
+
+.lead-card .footer-link {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.lead-card .footer-link a {
+    color: var(--bg-navy);
+    text-decoration: none;
+    font-weight: 600;
+}
+.lead-card .footer-link a:hover { text-decoration: underline; }
+
+.field-error {
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+.field-error.show { display: block; }
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 1 — CAMINO AL APTO
+   ═══════════════════════════════════════════════════════════ */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.section-header h2 {
+    font-family: var(--font-display);
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--bg-navy);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    line-height: 1;
+}
+.helper-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.55;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 0;
+}
+.paso-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 4px;
+    position: relative;
+}
+.paso-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    z-index: 2;
+    position: relative;
+}
+.paso-icon.actual {
+    background: white;
+    color: var(--gold);
+    border: 3px solid var(--gold);
+    width: 40px;
+    height: 40px;
+    margin-left: -2px;
+}
+.paso-icon.bloqueado {
+    background: var(--bg-soft);
+    color: var(--text-tertiary);
+    border: 1.5px solid var(--border);
+}
+.paso-line {
+    position: absolute;
+    left: 17px;
+    top: 36px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--green);
+    z-index: 1;
+}
+.paso-line.bloq { background: var(--border); }
+.paso-card {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.05s;
+    cursor: pointer;
+    position: relative;
+}
+.paso-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.paso-card.actual {
+    border: 2px solid var(--gold);
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, var(--gold), #F0C150) border-box;
+}
+.paso-card.bloqueado {
+    opacity: 0.6;
+    background: var(--bg-soft);
+}
+.paso-card .titulo {
+    font-weight: 700;
+    color: var(--bg-navy);
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+.paso-card .estado {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+.paso-tipo-badge {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--red-bg);
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11px;
+    border: 1.5px solid var(--red-border);
+}
+.paso-tipo-badge.teoria {
+    background: var(--blue-bg);
+    color: var(--blue);
+    border-color: rgba(29, 78, 216, 0.2);
+}
+
+.hito-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin: 6px 0 8px;
+}
+.hito-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.hito-banner {
+    flex: 1;
+    background: var(--gold-soft);
+    color: var(--gold-text);
+    border: 2px dashed var(--gold);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.demo-tip {
+    background: var(--gold-soft);
+    border-left: 4px solid var(--gold);
+    padding: 14px 16px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13.5px;
+    color: var(--gold-text);
+    margin-top: 24px;
+    line-height: 1.55;
+}
+.demo-tip strong { font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 2 — TEMA / TEORÍA
+   ═══════════════════════════════════════════════════════════ */
+.tema-meta {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.tema-titulo {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--bg-navy);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.05;
+    margin-bottom: 18px;
+}
+.cards-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+.info-card {
+    background: var(--bg-card);
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    border-left: 4px solid var(--gold);
+}
+.info-card .titulo-info {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--bg-navy);
+    margin-bottom: 4px;
+}
+.info-card .desc-info {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.video-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 22px;
+}
+.video-section .heading-section {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--bg-navy);
+    margin-bottom: 8px;
+}
+.video-section .heading-section .icono { margin-right: 6px; }
+.video-section .desc {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    line-height: 1.55;
+}
+.video-placeholder {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: var(--radius);
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.video-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(212, 175, 55, 0.03) 2px,
+            rgba(212, 175, 55, 0.03) 4px
+        );
+}
+.video-placeholder .play {
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--bg-navy);
+    z-index: 2;
+    position: relative;
+}
+.video-placeholder .play::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 18px solid var(--bg-navy);
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    margin-left: 4px;
+}
+.video-placeholder .duration {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.video-placeholder .video-label {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.concepto-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-left: 4px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 18px;
+}
+.concepto-section .heading-section {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--bg-navy);
+    margin-bottom: 10px;
+}
+.concepto-section p {
+    font-size: 14px;
+    line-height: 1.65;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+.concepto-section p:last-child { margin-bottom: 0; }
+.tip-box {
+    background: var(--blue-bg);
+    border: 1px solid rgba(29, 78, 216, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13.5px;
+    color: var(--bg-navy);
+    line-height: 1.55;
+    margin-top: 12px;
+}
+.tip-box .bombilla { color: var(--gold); margin-right: 4px; }
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 3 — EXAMEN
+   ═══════════════════════════════════════════════════════════ */
+.examen-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-sm);
+}
+.examen-header {
+    background: var(--bg-navy);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.examen-header .label-h {
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+.examen-header .puntos {
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 600;
+}
+.examen-body { padding: 20px; }
+.subtitle-examen {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+.subtitle-examen .regla {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.pregunta-block {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+.pregunta-block:last-child {
+    margin-bottom: 8px;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.pregunta-titulo {
+    font-weight: 700;
+    color: var(--bg-navy);
+    margin-bottom: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.opcion {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: white;
+    font-size: 14px;
+}
+.opcion:hover:not(.locked) {
+    background: var(--bg-card-hover);
+    border-color: var(--text-tertiary);
+}
+.opcion .radio {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--text-tertiary);
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    background: white;
+}
+.opcion.correcta {
+    background: var(--green-bg);
+    border-color: var(--green);
+    color: var(--green);
+    font-weight: 600;
+}
+.opcion.correcta .radio {
+    border-color: var(--green);
+    background: var(--green);
+}
+.opcion.correcta .radio::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-65%, -65%) rotate(45deg);
+}
+.opcion.incorrecta {
+    background: var(--red-bg);
+    border-color: var(--red);
+    color: var(--red);
+}
+.opcion.incorrecta .radio {
+    border-color: var(--red);
+    background: var(--red);
+}
+.opcion.incorrecta .radio::after {
+    content: '×';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+.opcion.locked { cursor: default; }
+
+.feedback-pregunta {
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px;
+    color: #166534;
+    margin-top: 10px;
+    line-height: 1.5;
+    display: none;
+}
+.feedback-pregunta.show { display: block; }
+.feedback-pregunta.fallo {
+    background: var(--red-bg);
+    border-left-color: var(--red);
+    color: #991B1B;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 4 — REPASO ESPACIADO
+   ═══════════════════════════════════════════════════════════ */
+.repaso-intro {
+    margin-bottom: 24px;
+}
+.repaso-intro p {
+    color: var(--text-secondary);
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.repaso-card {
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 22px;
+}
+.repaso-card .titulo-cabecera {
+    font-weight: 800;
+    color: #991B1B;
+    margin-bottom: 6px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.repaso-card .desc-cabecera {
+    color: #7F1D1D;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.repaso-item {
+    background: white;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.repaso-item:last-child { margin-bottom: 0; }
+.repaso-item .icono-libro {
+    color: var(--blue);
+    font-size: 16px;
+    margin-right: 4px;
+}
+.repaso-item .titulo-item {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.nivel-badge {
+    background: var(--red);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.curva-info {
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 4px;
+}
+.curva-info .titulo-curva {
+    font-weight: 700;
+    color: var(--bg-navy);
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+.curva-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.curva-stop {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+}
+.curva-stop .dia {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.curva-stop .delta {
+    font-family: var(--font-display);
+    color: var(--green);
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+.curva-info .descripcion {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLA 5 — PLANES
+   ═══════════════════════════════════════════════════════════ */
+.planes-titulo-block {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.planes-titulo-block h2 {
+    font-family: var(--font-display);
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--bg-navy);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    line-height: 1.05;
+    margin-bottom: 8px;
+}
+.planes-titulo-block p {
+    color: var(--text-secondary);
+    font-size: 14.5px;
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.55;
+}
+
+.planes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (max-width: 720px) {
+    .planes-grid { grid-template-columns: 1fr; }
+}
+
+.plan-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 22px 24px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+.plan-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+.plan-card.featured {
+    border: 2.5px solid var(--gold);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.18);
+}
+.plan-card .badge-popular {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--bg-navy);
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+.plan-card .icono-plan {
+    font-size: 36px;
+    margin-bottom: 6px;
+}
+.plan-card .nombre-plan {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--bg-navy);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+.plan-card .desc-plan {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    min-height: 32px;
+    line-height: 1.4;
+}
+.plan-card .precio {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--bg-navy);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.plan-card .precio .euros { font-size: 22px; vertical-align: top; }
+.plan-card .periodo {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+}
+.plan-card .features {
+    text-align: left;
+    list-style: none;
+    margin-bottom: 22px;
+    flex: 1;
+}
+.plan-card .features li {
+    font-size: 13px;
+    padding: 5px 0;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+.plan-card .features li.no { color: var(--text-tertiary); }
+.btn-plan {
+    width: 100%;
+    background: var(--bg-navy);
+    color: white;
+    padding: 13px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 0.3px;
+    transition: background 0.18s;
+}
+.btn-plan:hover { background: var(--bg-navy-2); }
+.btn-plan.gold {
+    background: var(--gold);
+    color: var(--bg-navy);
+}
+.btn-plan.gold:hover { background: #B8941F; }
+
+.garantia-row {
+    text-align: center;
+    padding: 16px;
+    background: var(--green-bg);
+    border-radius: var(--radius);
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
+.garantia-row .check { color: var(--green); margin-right: 6px; font-weight: 700; }
+
+.tiene-cuenta {
+    text-align: center;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+}
+.tiene-cuenta a {
+    color: var(--bg-navy);
+    text-decoration: underline;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVEGACIÓN INFERIOR
+   ═══════════════════════════════════════════════════════════ */
+.nav-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    gap: 12px;
+}
+.btn-nav {
+    background: white;
+    color: var(--bg-navy);
+    padding: 11px 22px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+}
+.btn-nav:hover:not(:disabled) {
+    border-color: var(--bg-navy);
+    background: var(--bg-card-hover);
+}
+.btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-nav.next {
+    background: var(--bg-navy);
+    color: white;
+    border-color: var(--bg-navy);
+}
+.btn-nav.next:hover:not(:disabled) { background: var(--bg-navy-2); }
+.step-counter {
+    font-size: 12.5px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Loading state */
+.loading {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .demo-wrapper { padding: 24px 14px 36px; }
+    .header-rincon .marca { font-size: 22px; letter-spacing: 2px; }
+    .header-alpha { padding: 12px 16px; }
+    .header-alpha .logo-alpha { font-size: 18px; letter-spacing: 2px; }
+    .header-alpha .iconos { gap: 12px; font-size: 16px; }
+    .lead-card { padding: 26px 22px 22px; }
+    .lead-card h1 { font-size: 26px; }
+    .section-header h2 { font-size: 30px; }
+    .tema-titulo { font-size: 24px; }
+    .planes-titulo-block h2 { font-size: 30px; }
+    .cards-row { grid-template-columns: 1fr; }
+    .curva-grid { grid-template-columns: repeat(2, 1fr); }
+    .examen-body { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header negro con marca -->
+<header class="header-rincon">
+    <div class="marca">EL RINCÓN <span class="acento">▶</span> DEL POLICÍA</div>
+</header>
+
+<!-- Header navy con MÉTODO ALPHA -->
+<header class="header-alpha">
+    <span class="menu-icon">☰</span>
+    <span class="logo-alpha">MÉTODO <span class="alpha-acento">⌘</span> ALPHA</span>
+    <div class="iconos">
+        <span title="Modo">☀️</span>
+        <span class="icono-llave" title="Mejorar plan">🔑</span>
+        <span title="Perfil">👤</span>
+        <span title="Material">📁</span>
+        <span title="Plan">📅</span>
+    </div>
+</header>
+
+<!-- Demo principal -->
+<main class="demo-wrapper">
+
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-step active"></div>
+        <div class="progress-step"></div>
+        <div class="progress-step"></div>
+        <div class="progress-step"></div>
+        <div class="progress-step"></div>
+        <div class="progress-step"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 0 — CAPTURA DE LEAD
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla active" data-pantalla="0">
+        <div class="lead-card">
+            <span class="badge">Acceso de prueba gratuito</span>
+            <h1>Prueba el método antes de decidir</h1>
+            <p class="subtitle">En 2 minutos vas a ver cómo se prepara la teoría, cómo son los exámenes y cómo te organiza los repasos. Antes de empezar, déjanos cómo contactarte por si necesitamos resolverte alguna duda durante tu prueba.</p>
+            
+            <form id="leadForm" novalidate>
+                <label for="leadEmail">Email</label>
+                <input type="email" id="leadEmail" name="email" placeholder="tu@email.com" required autocomplete="email">
+                <div class="field-error" id="errEmail">Email no válido</div>
+                
+                <label for="leadTel">Teléfono</label>
+                <input type="tel" id="leadTel" name="telefono" placeholder="600 000 000" required autocomplete="tel">
+                <div class="field-error" id="errTel">Teléfono no válido (mínimo 9 dígitos)</div>
+                
+                <div class="privacy">
+                    <input type="checkbox" id="leadPrivacy" required>
+                    <label for="leadPrivacy" style="margin: 0; text-transform: none; letter-spacing: 0; font-weight: normal; font-size: 12.5px; color: var(--text-secondary);">
+                        He leído y acepto la <a href="#" id="linkPrivacidad" target="_blank">política de privacidad</a> y autorizo el tratamiento de mis datos para recibir información sobre el Método ALPHA.
+                    </label>
+                </div>
+                <div class="field-error" id="errPrivacy">Debes aceptar la política de privacidad</div>
+                
+                <button type="submit" class="btn-primary" id="btnEmpezar">Empezar la prueba →</button>
+            </form>
+            
+            <div class="footer-link">
+                ¿Ya tienes cuenta? <a href="#" id="linkApp">Entrar a la app</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 1 — CAMINO AL APTO
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla" data-pantalla="1">
+        <div class="section-header">
+            <h2>Camino al Apto</h2>
+        </div>
+        <p class="helper-text">El método divide las 535 lecciones de la oposición en pasos pequeños. Cada uno es una lección, un examen o un repaso programado. Avanzas paso a paso, sin improvisar.</p>
+        
+        <div class="timeline">
+            <div class="paso-row">
+                <div style="position: relative;">
+                    <div class="paso-icon">✓</div>
+                    <div class="paso-line"></div>
+                </div>
+                <div class="paso-card">
+                    <div class="titulo">0. INICIO: Bienvenido al Método</div>
+                    <div class="estado">Dominado · Clic para repasar</div>
+                </div>
+            </div>
+            
+            <div class="hito-row">
+                <div class="hito-icon">★</div>
+                <div class="hito-banner">Hito 0 alcanzado — +5 PTS</div>
+            </div>
+            
+            <div class="paso-row">
+                <div style="position: relative;">
+                    <div class="paso-icon">✓</div>
+                    <div class="paso-line"></div>
+                </div>
+                <div class="paso-card">
+                    <div class="titulo">1. Tema 8: Estructura de la DGP</div>
+                    <div class="estado">Dominado · Clic para repasar</div>
+                    <div class="paso-tipo-badge teoria">T</div>
+                </div>
+            </div>
+            
+            <div class="paso-row">
+                <div style="position: relative;">
+                    <div class="paso-icon actual">2</div>
+                    <div class="paso-line bloq"></div>
+                </div>
+                <div class="paso-card actual">
+                    <div class="titulo">2. Examen: Estructura de la DGP</div>
+                    <div class="estado" style="color: var(--gold-text); font-weight: 600;">▶ Tu siguiente paso</div>
+                    <div class="paso-tipo-badge">E</div>
+                </div>
+            </div>
+            
+            <div class="paso-row">
+                <div style="position: relative;">
+                    <div class="paso-icon bloqueado">3</div>
+                    <div class="paso-line bloq"></div>
+                </div>
+                <div class="paso-card bloqueado">
+                    <div class="titulo">3. Tema 8: La Cúpula y la DCI</div>
+                    <div class="estado">Bloqueado hasta completar el anterior</div>
+                    <div class="paso-tipo-badge teoria">T</div>
+                </div>
+            </div>
+            
+            <div class="paso-row">
+                <div style="position: relative;">
+                    <div class="paso-icon bloqueado">4</div>
+                </div>
+                <div class="paso-card bloqueado">
+                    <div class="titulo">4. Examen: La Cúpula y la DCI</div>
+                    <div class="estado">Bloqueado</div>
+                    <div class="paso-tipo-badge">E</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-tip">
+            <strong>En las siguientes pantallas verás cómo funciona</strong> un tema, un examen y los repasos espaciados. Es exactamente lo que verás dentro de la app cuando te suscribas.
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 2 — TEMA / TEORÍA
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla" data-pantalla="2">
+        <div class="tema-meta">Paso 1 · Tema</div>
+        <div class="tema-titulo">Tema 8: Estructura de la DGP</div>
+        
+        <div class="cards-row">
+            <div class="info-card">
+                <div class="titulo-info">📅 Programación automática</div>
+                <div class="desc-info">Al completar este paso, la app programa cuándo toca volver a verlo.</div>
+            </div>
+            <div class="info-card">
+                <div class="titulo-info">📝 Tests de convocatorias</div>
+                <div class="desc-info">En pasos posteriores encontrarás tests de este tema con preguntas reales de exámenes anteriores.</div>
+            </div>
+        </div>
+        
+        <div class="video-section">
+            <div class="heading-section"><span class="icono">🎬</span>Videoclase: La Estructura de la DGP</div>
+            <div class="desc">Antes de meterte con las normas y el ajedrez, dale al play para que tu cerebro construya el mapa mental de este tema.</div>
+            <div class="video-placeholder">
+                <span class="video-label">VIMEO · DEMO</span>
+                <div class="play"></div>
+                <span class="duration">26:10</span>
+            </div>
+        </div>
+        
+        <div class="concepto-section">
+            <div class="heading-section">📚 Concepto previo 1 — Las normas y su jerarquía</div>
+            <p>La <strong>Dirección General de la Policía</strong> es el órgano del Ministerio del Interior responsable de la dirección, organización y administración del Cuerpo Nacional de Policía.</p>
+            <p>Su titular es el Director General de la Policía, con rango de <strong>Subsecretario</strong>, nombrado por Real Decreto a propuesta del Ministro del Interior.</p>
+            <p>De la DGP dependen jerárquicamente la <strong>Dirección Adjunta Operativa (DAO)</strong> y las distintas Subdirecciones Generales y Divisiones que componen la estructura central del Cuerpo.</p>
+            <div class="tip-box">
+                <span class="bombilla">💡</span><strong>Esto se estudia en profundidad</strong> en el Tema 1 (Principio de Jerarquía Normativa). Aquí solo te damos la base para que el Tema 8 tenga sentido desde el principio.
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 3 — EXAMEN
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla" data-pantalla="3">
+        <div class="tema-meta">Paso 2 · Examen</div>
+        <div class="tema-titulo">Examen: Estructura de la DGP</div>
+        
+        <p class="subtitle-examen">Ha llegado el momento de la verdad. Vamos a poner a prueba lo que has retenido del Megaesquema.<br><span class="regla">Regla de oro: 3 opciones, solo una correcta. Los fallos penalizan 0,5 puntos.</span></p>
+        
+        <div class="examen-card">
+            <div class="examen-header">
+                <span class="label-h">Test de Examen</span>
+                <span class="puntos">Acierto +1 · Fallo -0,5</span>
+            </div>
+            <div class="examen-body">
+                
+                <div class="pregunta-block" data-pregunta="1">
+                    <div class="pregunta-titulo">1. Según el art. 1.1, ¿qué nivel orgánico tienen la DAO, la SGRHF, la SGLI y el Gabinete Técnico?</div>
+                    <div class="opciones-grupo">
+                        <div class="opcion" data-correct="false"><div class="radio"></div><span>A) Nivel de Dirección General</span></div>
+                        <div class="opcion" data-correct="false"><div class="radio"></div><span>B) Nivel de División</span></div>
+                        <div class="opcion" data-correct="true"><div class="radio"></div><span>C) Nivel de Subdirección General</span></div>
+                    </div>
+                    <div class="feedback-pregunta" data-fb="1">
+                        <strong>Correcto.</strong> El art. 1.1 establece expresamente que estos órganos tienen rango de Subdirección General, que es el nivel inmediatamente inferior al de la DGP.
+                    </div>
+                </div>
+                
+                <div class="pregunta-block" data-pregunta="2">
+                    <div class="pregunta-titulo">2. Las Comisarías Generales de la Policía Nacional dependen de…</div>
+                    <div class="opciones-grupo">
+                        <div class="opcion" data-correct="true"><div class="radio"></div><span>A) La Dirección Adjunta Operativa (DAO)</span></div>
+                        <div class="opcion" data-correct="false"><div class="radio"></div><span>B) El Gabinete Técnico</span></div>
+                        <div class="opcion" data-correct="false"><div class="radio"></div><span>C) La persona titular de la Dirección General de la Policía</span></div>
+                    </div>
+                    <div class="feedback-pregunta" data-fb="2">
+                        <strong>Correcto.</strong> Las Comisarías Generales (Información, Policía Judicial, Seguridad Ciudadana, Extranjería y Fronteras) dependen orgánica y funcionalmente de la DAO.
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 4 — REPASO ESPACIADO
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla" data-pantalla="4">
+        <div class="section-header">
+            <h2>No te lo olvidarás</h2>
+        </div>
+        
+        <div class="repaso-intro">
+            <p>El método aplica <strong>repaso espaciado</strong>: cada tema vuelve a aparecer en los días en que tu cerebro está a punto de olvidarlo. Así se fija a largo plazo sin esfuerzo extra.</p>
+        </div>
+        
+        <div class="repaso-card">
+            <div class="titulo-cabecera">⚠️ Repasos Obligatorios Hoy</div>
+            <div class="desc-cabecera">La Curva del Olvido avisa: repasa esto hoy o lo olvidarás.</div>
+            
+            <div class="repaso-item">
+                <span class="icono-libro">📕</span>
+                <span class="titulo-item">Examen: Estructura de la DGP</span>
+                <span class="nivel-badge">Nivel 1</span>
+            </div>
+            <div class="repaso-item">
+                <span class="icono-libro">📕</span>
+                <span class="titulo-item">Tema 8: La Cúpula y la DCI (Arts. 2 y 3)</span>
+                <span class="nivel-badge">Nivel 2</span>
+            </div>
+            <div class="repaso-item">
+                <span class="icono-libro">📕</span>
+                <span class="titulo-item">Examen: La Cúpula y la DCI</span>
+                <span class="nivel-badge">Nivel 1</span>
+            </div>
+            <div class="repaso-item">
+                <span class="icono-libro">📕</span>
+                <span class="titulo-item">Tema 8: La DAO y el 'Juego de la Serpiente' (Art. 4)</span>
+                <span class="nivel-badge">Nivel 1</span>
+            </div>
+        </div>
+        
+        <div class="curva-info">
+            <div class="titulo-curva">Tu tema "Estructura de la DGP" reaparecerá:</div>
+            <div class="curva-grid">
+                <div class="curva-stop">
+                    <div class="dia">Mañana</div>
+                    <div class="delta">+1d</div>
+                </div>
+                <div class="curva-stop">
+                    <div class="dia">En 3 días</div>
+                    <div class="delta">+3d</div>
+                </div>
+                <div class="curva-stop">
+                    <div class="dia">En 1 semana</div>
+                    <div class="delta">+7d</div>
+                </div>
+                <div class="curva-stop">
+                    <div class="dia">En 2 semanas</div>
+                    <div class="delta">+14d</div>
+                </div>
+            </div>
+            <div class="descripcion">Sin repasar, en una semana habrías olvidado el 70%. Con repaso espaciado, retienes el 90% sin esfuerzo extra. Es el mismo sistema que usan los estudiantes de medicina y los pilotos de combate.</div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PANTALLA 5 — PLANES Y SUSCRIPCIÓN
+         ════════════════════════════════════════════════════════════ -->
+    <div class="pantalla" data-pantalla="5">
+        <div class="planes-titulo-block">
+            <h2>Elige tu plan</h2>
+            <p>Has visto cómo funciona el método. Tienes 535 pasos como estos esperándote. Acceso inmediato, garantía de 7 días.</p>
+        </div>
+        
+        <div class="planes-grid">
+            
+            <div class="plan-card">
+                <div class="icono-plan">🥉</div>
+                <div class="nombre-plan">Básico</div>
+                <div class="desc-plan">Temario completo + Tests</div>
+                <div class="precio"><span class="euros">€</span>49,95</div>
+                <div class="periodo">/ mes · IVA incluido</div>
+                <ul class="features">
+                    <li>✅ Temas, Megaresumidos y Megaesquemas</li>
+                    <li>✅ Mapa de Ruta completo (45 temas)</li>
+                    <li>✅ Modo Cinemático de lecciones</li>
+                    <li>✅ Tests por avance</li>
+                    <li class="no">❌ Sin Psicotécnicos ni Entrevista</li>
+                    <li class="no">❌ Sin Planificación de repasos</li>
+                </ul>
+                <a href="#" class="btn-plan" data-plan="basico">Elegir Básico</a>
+            </div>
+            
+            <div class="plan-card">
+                <div class="icono-plan">🥈</div>
+                <div class="nombre-plan">Pro</div>
+                <div class="desc-plan">Todas las pruebas teóricas + psicológicas</div>
+                <div class="precio"><span class="euros">€</span>74,95</div>
+                <div class="periodo">/ mes · IVA incluido</div>
+                <ul class="features">
+                    <li>✅ Todo lo del plan Básico</li>
+                    <li>✅ Psicotécnicos</li>
+                    <li>✅ Test de Personalidad</li>
+                    <li>✅ Preparación de Biodata</li>
+                    <li>✅ Preparación de Entrevista</li>
+                    <li>✅ Simulacros de Examen Globales</li>
+                    <li class="no">❌ Sin Planificación de repasos</li>
+                    <li class="no">❌ Sin preparación Física</li>
+                </ul>
+                <a href="#" class="btn-plan" data-plan="pro">Elegir Pro</a>
+            </div>
+            
+            <div class="plan-card featured">
+                <div class="badge-popular">⭐ El más elegido</div>
+                <div class="icono-plan">👑</div>
+                <div class="nombre-plan">Élite</div>
+                <div class="desc-plan">Piloto Automático — Solo siéntate y obedece</div>
+                <div class="precio"><span class="euros">€</span>99,95</div>
+                <div class="periodo">/ mes · IVA incluido</div>
+                <ul class="features">
+                    <li>✅ Todo lo del plan Pro</li>
+                    <li>✅ App de test</li>
+                    <li>✅ Planificación ALPHA de Arrastre (Curva del Olvido)</li>
+                    <li>✅ Preparación Física completa</li>
+                    <li>✅ Cazapreguntas</li>
+                    <li>✅ Mapa de Dominio del Temario detallado</li>
+                </ul>
+                <a href="#" class="btn-plan gold" data-plan="elite">👑 Elegir Élite</a>
+            </div>
+            
+        </div>
+        
+        <div class="garantia-row">
+            <span class="check">✓</span> 7 días de garantía con devolución completa · Cancela cuando quieras · Sin permanencia
+        </div>
+        
+        <div class="tiene-cuenta">
+            ¿Ya tienes cuenta? <a href="#" id="linkApp2">Entrar al Método ALPHA</a>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         NAVEGACIÓN INFERIOR (oculta en pantalla 0 y 5)
+         ════════════════════════════════════════════════════════════ -->
+    <div class="nav-bottom" id="navBottom" style="display:none;">
+        <button class="btn-nav" id="btnPrev">← Anterior</button>
+        <span class="step-counter" id="stepCounter">Paso 1 de 4</span>
+        <button class="btn-nav next" id="btnNext">Siguiente →</button>
+    </div>
+
+</main>
+
+<script>
+(function() {
+    'use strict';
+    
+    const cfg = window.DEMO_CONFIG;
+    let pantallaActual = 0;
+    let leadId = null;
+    let leadEmail = null;
+    
+    const TOTAL_PANTALLAS = 6; // 0 a 5
+    
+    // ─────────────────────────────────────────────
+    // Tracking: leer UTMs del propagator (si existe)
+    // y caer atrás a URL si no
+    // ─────────────────────────────────────────────
+    function getTracking() {
+        // Intentar leer del TrackingPropagator (debería estar cargado por landing)
+        if (window.TrackingPropagator && typeof window.TrackingPropagator.get === 'function') {
+            return window.TrackingPropagator.get() || {};
+        }
+        // Fallback: leer de la URL
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const out = {};
+            ['utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+             'fbclid','fbc','fbp','gclid'].forEach(k => {
+                const v = params.get(k);
+                if (v) out[k] = v;
+            });
+            return out;
+        } catch (e) { return {}; }
+    }
+    
+    // ─────────────────────────────────────────────
+    // Pintar progreso + cambiar pantalla
+    // ─────────────────────────────────────────────
+    function mostrarPantalla(n) {
+        document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('active'));
+        const target = document.querySelector('[data-pantalla="' + n + '"]');
+        if (target) target.classList.add('active');
+        pantallaActual = n;
+        
+        // Progreso
+        const dots = document.querySelectorAll('.progress-step');
+        dots.forEach((d, i) => {
+            d.classList.remove('active', 'done');
+            if (i < n) d.classList.add('done');
+            else if (i === n) d.classList.add('active');
+        });
+        
+        // Navegación
+        const navBottom = document.getElementById('navBottom');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const stepCounter = document.getElementById('stepCounter');
+        
+        if (n === 0 || n === 5) {
+            navBottom.style.display = 'none';
+        } else {
+            navBottom.style.display = 'flex';
+            btnPrev.disabled = (n === 1);
+            stepCounter.textContent = 'Paso ' + n + ' de 4';
+            
+            if (n === 4) {
+                btnNext.textContent = 'Ver planes →';
+            } else {
+                btnNext.textContent = 'Siguiente →';
+            }
+        }
+        
+        // Si estamos en pantalla 5, construir URLs de Stripe
+        if (n === 5) construirURLsStripe();
+        
+        // Scroll al top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // ─────────────────────────────────────────────
+    // Construir URLs de Stripe enriquecidas
+    // ─────────────────────────────────────────────
+    function construirURLsStripe() {
+        const tracking = getTracking();
+        const planes = ['basico', 'pro', 'elite'];
+        
+        planes.forEach(plan => {
+            const btn = document.querySelector('[data-plan="' + plan + '"]');
+            if (!btn) return;
+            
+            try {
+                const u = new URL(cfg.stripe[plan]);
+                
+                // 1. UTMs
+                ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => {
+                    if (tracking[k]) u.searchParams.set(k, tracking[k]);
+                });
+                
+                // 2. client_reference_id con leadId (si lo tenemos)
+                if (leadId) {
+                    const src = (tracking.utm_source || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20);
+                    const cmp = (tracking.utm_campaign || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 30);
+                    const ref = 'lead_' + leadId + (src ? '|' + src : '') + (cmp ? '|' + cmp : '');
+                    u.searchParams.set('client_reference_id', ref.slice(0, 200));
+                }
+                
+                // 3. Email pre-rellenado
+                if (leadEmail) {
+                    u.searchParams.set('prefilled_email', leadEmail);
+                }
+                
+                btn.href = u.toString();
+                btn.target = '_blank';
+            } catch (e) {
+                console.warn('[demo] Error construyendo URL de Stripe para', plan, e);
+                btn.href = cfg.stripe[plan];
+                btn.target = '_blank';
+            }
+        });
+    }
+    
+    // ─────────────────────────────────────────────
+    // Validación del form de lead
+    // ─────────────────────────────────────────────
+    function validarEmail(e) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    }
+    
+    function validarTel(t) {
+        const limpio = t.replace(/[\s\-\(\)\+]/g, '');
+        return /^\d{9,15}$/.test(limpio);
+    }
+    
+    function mostrarError(id, mostrar) {
+        const el = document.getElementById(id);
+        if (mostrar) el.classList.add('show');
+        else el.classList.remove('show');
+    }
+    
+    // ─────────────────────────────────────────────
+    // Submit del form de lead
+    // ─────────────────────────────────────────────
+    async function enviarLead(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('leadEmail').value.trim();
+        const tel = document.getElementById('leadTel').value.trim();
+        const privacy = document.getElementById('leadPrivacy').checked;
+        
+        let valid = true;
+        
+        if (!validarEmail(email)) {
+            document.getElementById('leadEmail').classList.add('error');
+            mostrarError('errEmail', true);
+            valid = false;
+        } else {
+            document.getElementById('leadEmail').classList.remove('error');
+            mostrarError('errEmail', false);
+        }
+        
+        if (!validarTel(tel)) {
+            document.getElementById('leadTel').classList.add('error');
+            mostrarError('errTel', true);
+            valid = false;
+        } else {
+            document.getElementById('leadTel').classList.remove('error');
+            mostrarError('errTel', false);
+        }
+        
+        if (!privacy) {
+            mostrarError('errPrivacy', true);
+            valid = false;
+        } else {
+            mostrarError('errPrivacy', false);
+        }
+        
+        if (!valid) return;
+        
+        // Estado de carga
+        const btn = document.getElementById('btnEmpezar');
+        const textoOriginal = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span>Guardando...';
+        
+        // Construir payload
+        const tracking = getTracking();
+        const payload = {
+            email: email,
+            telefono: tel,
+            url_origen: window.location.href.slice(0, 500),
+            referrer: document.referrer.slice(0, 500),
+            user_agent: navigator.userAgent.slice(0, 300),
+            tracking: tracking,
+            created_at_client: Date.now()
+        };
+        
+        // Enviar a Cloud Function
+        try {
+            const resp = await fetch(cfg.leadEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (resp.ok) {
+                const data = await resp.json();
+                leadId = data.leadId || null;
+                leadEmail = email;
+                console.log('[demo] Lead guardado:', leadId);
+            } else {
+                console.warn('[demo] Error guardando lead:', resp.status);
+                // Aún así dejamos al usuario pasar al demo
+                leadEmail = email;
+            }
+        } catch (err) {
+            console.warn('[demo] Error de red guardando lead:', err);
+            // Aún así dejamos al usuario pasar
+            leadEmail = email;
+        }
+        
+        // Pasar al demo
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        mostrarPantalla(1);
+    }
+    
+    // ─────────────────────────────────────────────
+    // Test interactivo
+    // ─────────────────────────────────────────────
+    function activarTest() {
+        document.querySelectorAll('.opciones-grupo').forEach(grupo => {
+            grupo.querySelectorAll('.opcion').forEach(opc => {
+                opc.addEventListener('click', function() {
+                    if (this.classList.contains('locked')) return;
+                    
+                    const block = grupo.closest('.pregunta-block');
+                    
+                    // Bloquear todas las opciones del grupo
+                    grupo.querySelectorAll('.opcion').forEach(x => x.classList.add('locked'));
+                    
+                    const ok = this.dataset.correct === 'true';
+                    
+                    if (ok) {
+                        this.classList.add('correcta');
+                    } else {
+                        this.classList.add('incorrecta');
+                        // Mostrar la correcta también
+                        const buena = grupo.querySelector('[data-correct="true"]');
+                        if (buena) buena.classList.add('correcta');
+                    }
+                    
+                    // Mostrar feedback
+                    const fb = block.querySelector('.feedback-pregunta');
+                    if (fb) {
+                        fb.classList.add('show');
+                        if (!ok) fb.classList.add('fallo');
+                    }
+                });
+            });
+        });
+    }
+    
+    // ─────────────────────────────────────────────
+    // INICIALIZACIÓN
+    // ─────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar links
+        const linkApp = document.getElementById('linkApp');
+        const linkApp2 = document.getElementById('linkApp2');
+        if (linkApp) linkApp.href = cfg.appUrl;
+        if (linkApp2) linkApp2.href = cfg.appUrl;
+        document.getElementById('linkPrivacidad').href = cfg.privacyUrl;
+        
+        // Form de lead
+        document.getElementById('leadForm').addEventListener('submit', enviarLead);
+        
+        // Navegación
+        document.getElementById('btnPrev').addEventListener('click', () => {
+            if (pantallaActual > 1) mostrarPantalla(pantallaActual - 1);
+        });
+        document.getElementById('btnNext').addEventListener('click', () => {
+            if (pantallaActual < 5) mostrarPantalla(pantallaActual + 1);
+        });
+        
+        // Test
+        activarTest();
+        
+        // Estado inicial
+        mostrarPantalla(0);
+    });
+})();
+</script>
+
+</body>
+</html>
